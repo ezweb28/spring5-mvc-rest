@@ -1,7 +1,7 @@
 package guru.springframework.controllers.v1;
 
-import guru.springframework.api.v1.model.CustomerDTO;
 import guru.springframework.controllers.RestResponseEntityExceptionHandler;
+import guru.springframework.model.CustomerDTO;
 import guru.springframework.services.CustomerService;
 import guru.springframework.services.ResourceNotFoundException;
 import org.junit.Before;
@@ -11,6 +11,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
@@ -100,18 +102,20 @@ public class CustomerControllerTest {
         customer1.setLastname("Weston");
 
         CustomerDTO returnDTO = new CustomerDTO();
-        returnDTO.setFirstname(customer1.getFirstname());
-        returnDTO.setLastname(customer1.getLastname());
+        returnDTO.setFirstname("Fred");
+        returnDTO.setLastname("Weston");
         returnDTO.setCustomerUrl(CustomerController.BASE_URL + "/1");
 
-        when(customerService.createNewCustomer(customer1)).thenReturn(returnDTO);
+        when(customerService.createNewCustomer(any(CustomerDTO.class))).thenReturn(returnDTO);
 
-        mockMvc.perform(post(CustomerController.BASE_URL).contentType(MediaType.APPLICATION_JSON)
+        ResultActions resultActions = mockMvc.perform(post(CustomerController.BASE_URL)
                 .accept(MediaType.APPLICATION_JSON)
-                .content(asJsonString(customer1)))
-                .andExpect(status().isCreated())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(customer1)));
+        resultActions.andDo(MockMvcResultHandlers.print());
+        resultActions.andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firstname", equalTo("Fred")))
-                .andExpect(jsonPath("$.customer_url", equalTo("/api/v1/customers/1")));
+                .andExpect(jsonPath("$.customerUrl", equalTo("/api/v1/customers/1")));
     }
 
     @Test
@@ -135,7 +139,7 @@ public class CustomerControllerTest {
                 .content(asJsonString(customer1)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstname", equalTo("Fred")))
-                .andExpect(jsonPath("$.customer_url", equalTo(CustomerController.BASE_URL + "/1")));
+                .andExpect(jsonPath("$.customerUrl", equalTo(CustomerController.BASE_URL + "/1")));
     }
 
     @Test
@@ -159,7 +163,7 @@ public class CustomerControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstname", equalTo("Fred")))
                 .andExpect(jsonPath("$.lastname", equalTo("Flintstone")))
-                .andExpect(jsonPath("$.customer_url", equalTo(CustomerController.BASE_URL + "/1")));
+                .andExpect(jsonPath("$.customerUrl", equalTo(CustomerController.BASE_URL + "/1")));
 
     }
 
